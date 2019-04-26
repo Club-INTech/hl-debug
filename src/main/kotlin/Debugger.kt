@@ -7,14 +7,14 @@ import javax.swing.WindowConstants
 import kotlin.concurrent.thread
 
 val PointRegex = Regex("^.*\\[.*(?<time>[0-9][0-9]:[0-9][0-9]\\.[0-9][0-9][0-9]) LIDAR.* Circle \\[center: \\((?<x>[0-9]+),(?<y>[0-9]+).*\$")
-val PositionRegex = Regex("\\[.*POSITION .*xy=\\((?<x>[0-9]+),(?<y>[0-9]+)\\), o=(?<orientation>.+)\\)")
+val PositionRegex = Regex("\\[.*(?<time>[0-9][0-9]:[0-9][0-9]\\.[0-9][0-9][0-9]) POSITION .*xy=\\((?<x>[0-9]+),(?<y>[0-9]+)\\), o=(?<orientation>.+)\\)")
 
 data class XYO(var x: Int, var y: Int, var orientation: Double)
-data class LidarPoint(val x: Int, val y: Int, val time: String, val robotPos: XYO)
+data class LidarPoint(val x: Int, val y: Int)
 
-class Debugger(points: List<LidarPoint>) : JFrame("HL Lidar Debugger") {
+class Debugger(chronology: Chronology) : JFrame("HL Lidar Debugger") {
 
-    private val panel = RenderPanel(points)
+    private val panel = RenderPanel(chronology)
 
     init {
         defaultCloseOperation = WindowConstants.DISPOSE_ON_CLOSE
@@ -37,36 +37,41 @@ fun main() {
         val reader = BufferedReader(FileReader(file))
         val points = LinkedList<LidarPoint>()
 
+        val chronology = Chronology()
         val currentPosition = XYO(0,0,0.0)
 
         // lecture des points
         reader.lines().forEach { line ->
             val matchResult = PointRegex.matchEntire(line)
             if(matchResult != null) {
+                println("lidar: $line")
                 val x = matchResult.groups["x"]!!.value.toInt()
                 val y = matchResult.groups["y"]!!.value.toInt()
                 val time = matchResult.groups["time"]!!.value
-                points += LidarPoint(x, y, time, currentPosition.copy())
-                println("Point trouvé: ($x, $y, $time)")
+                chronology.appendLidarPoint(LidarPoint(x, y), time)
+                println("Point trouvé: ($x, $y)")
             } else {
                 val posResult = PositionRegex.matchEntire(line) ?: return@forEach
+                println("pos: $line")
                 val x = posResult.groups["x"]!!.value.toInt()
                 val y = posResult.groups["y"]!!.value.toInt()
+                val time = posResult.groups["time"]!!.value
                 val orientation = posResult.groups["orientation"]!!.value.toDouble()
                 currentPosition.x = x
                 currentPosition.y = y
                 currentPosition.orientation = orientation
+                chronology.setPosition(currentPosition.copy(), time)
             }
         }
 
         // création de la fenêtre
-        val debugger = Debugger(points)
+        val debugger = Debugger(chronology)
 
         thread(isDaemon = true) {
             while (true) {
                 debugger.incrementFrame()
                 debugger.repaint()
-                Thread.sleep(16)
+                Thread.sleep(15)
             }
         }
         debugger.isVisible = true
