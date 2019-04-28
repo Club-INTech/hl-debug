@@ -7,7 +7,7 @@ import javax.swing.WindowConstants
 import kotlin.concurrent.thread
 
 val PointRegex = Regex("^.*\\[.*(?<time>[0-9][0-9]:[0-9][0-9]\\.[0-9][0-9][0-9]) LIDAR.* Circle \\[center: \\((?<x>[0-9]+),(?<y>[0-9]+).*\$")
-val PositionRegex = Regex("\\[.*(?<time>[0-9][0-9]:[0-9][0-9]\\.[0-9][0-9][0-9]) POSITION .*xy=\\((?<x>[0-9]+),(?<y>[0-9]+)\\), o=(?<orientation>.+)\\)")
+val PositionRegex = Regex("\\[.*(?<time>[0-9][0-9]:[0-9][0-9]\\.[0-9][0-9][0-9]) POSITION .*xy=\\((?<x>[0-9]+),(?<y>[0-9]+)\\), o=(?<orientation>.*)\\)")
 
 data class XYO(var x: Int, var y: Int, var orientation: Double)
 data class LidarPoint(val x: Int, val y: Int)
@@ -56,7 +56,8 @@ fun main() {
                 val x = posResult.groups["x"]!!.value.toInt()
                 val y = posResult.groups["y"]!!.value.toInt()
                 val time = posResult.groups["time"]!!.value
-                val orientation = posResult.groups["orientation"]!!.value.toDouble()
+                val orienValue = posResult.groups["orientation"]!!.value.substringBefore(")") // parfois deux lignes sont collées
+                val orientation = orienValue.toDouble()
                 currentPosition.x = x
                 currentPosition.y = y
                 currentPosition.orientation = orientation

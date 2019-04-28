@@ -6,7 +6,7 @@ import javax.swing.JPanel
 
 class RenderPanel(private val chronology: Chronology): JPanel() {
 
-    private val FRAME_AT_ONCE_COUNT = 25
+    private val FRAME_AT_ONCE_COUNT = 10
     private val ASPECT_RATIO = 16/9f
     private val HEIGHT = 720
     private val WIDTH = (ASPECT_RATIO*HEIGHT).toInt()
@@ -46,10 +46,10 @@ class RenderPanel(private val chronology: Chronology): JPanel() {
             g.fillOval(robotX-robotRadius, robotY-robotRadius, robotRadius*2, robotRadius*2)
 
             g.color = Color.GREEN
-            val lookVectorPixelLength = 75
+            val lookVectorPixelLength = 150f
             val directionX = (Math.cos(robotLocation.orientation)*lookVectorPixelLength).toInt()
             val directionY = -(Math.sin(robotLocation.orientation)*lookVectorPixelLength).toInt()
-            g.drawLine(robotX, robotY, directionX+robotX-robotRadius, directionY+robotY-robotRadius)
+            g.drawLine(robotX, robotY, directionX+robotX, directionY+robotY)
 
             g.color = Color.GREEN
             g.drawString(frame.time, 0, 10+(index-i)*10)
