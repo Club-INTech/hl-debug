@@ -6,11 +6,11 @@ import javax.swing.JFrame
 import javax.swing.WindowConstants
 import kotlin.concurrent.thread
 
-val PointRegex = Regex("^.*\\[.*(?<time>[0-9][0-9]:[0-9][0-9]\\.[0-9][0-9][0-9]) LIDAR.* Circle \\[center: \\((?<x>[0-9]+),(?<y>[0-9]+).*\$")
-val PositionRegex = Regex("\\[.*(?<time>[0-9][0-9]:[0-9][0-9]\\.[0-9][0-9][0-9]) POSITION .*xy=\\((?<x>[0-9]+),(?<y>[0-9]+)\\), o=(?<orientation>.*)\\)")
+val PointRegex = Regex("^.*\\[.*(?<time>[0-9][0-9]:[0-9][0-9]\\.[0-9][0-9][0-9]) LIDAR.* Circle \\[center: \\((?<x>-?[0-9]+),(?<y>-?[0-9]+)\\), ray : (?<radius>[0-9]+\\.[0-9]+),.*\$")
+val PositionRegex = Regex("\\[.*(?<time>[0-9][0-9]:[0-9][0-9]\\.[0-9][0-9][0-9]) POSITION .*xy=\\((?<x>-?[0-9]+),(?<y>-?[0-9]+)\\), o=(?<orientation>.*)\\)")
 
 data class XYO(var x: Int, var y: Int, var orientation: Double)
-data class LidarPoint(val x: Int, val y: Int)
+data class LidarPoint(val x: Int, val y: Int, val radius: Double)
 
 class Debugger(chronology: Chronology) : JFrame("HL Lidar Debugger") {
 
@@ -47,9 +47,10 @@ fun main() {
                 println("lidar: $line")
                 val x = matchResult.groups["x"]!!.value.toInt()
                 val y = matchResult.groups["y"]!!.value.toInt()
+                val radius = matchResult.groups["radius"]!!.value.toDouble()
                 val time = matchResult.groups["time"]!!.value
-                chronology.appendLidarPoint(LidarPoint(x, y), time)
-                println("Point trouvé: ($x, $y)")
+                chronology.appendLidarPoint(LidarPoint(x, y, radius), time)
+                println("Point trouvé: ($x, $y, $radius)")
             } else {
                 val posResult = PositionRegex.matchEntire(line) ?: return@forEach
                 println("pos: $line")

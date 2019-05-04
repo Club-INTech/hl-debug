@@ -25,13 +25,14 @@ class RenderPanel(private val chronology: Chronology): JPanel() {
     override fun paint(g: Graphics) {
         g.drawImage(image, 0, 0, width, height, null)
 
-        val radius = (220/3000f*WIDTH).toInt()
         val robotRadius = (190/3000f*WIDTH).toInt()
 
 
         for(index in i until minOf(frames.size, i+FRAME_AT_ONCE_COUNT)) {
             val frame = chronology[chronology.timestamps[index]]
             for(point in frame.lidarPoints) {
+                val radius = (point.radius/3000f*WIDTH).toInt()
+
                 val centerX = ((point.x + 1500) / 3000f * width).toInt()
                 val centerY = ((2000 - point.y) / 2000f * height).toInt()
                 g.color = GOLD
